@@ -1,0 +1,8 @@
+Metadata-Version: 2.2
+Name: aimodellib
+Version: 0.0.1
+Requires-Dist: aiohttp
+Requires-Dist: boto3
+Requires-Dist: requests
+Requires-Dist: tensorboard
+Dynamic: requires-dist

@@ -1,0 +1,2 @@
+[console_scripts]
+aimodellib = aimodellib.main:main
