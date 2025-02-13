@@ -61,7 +61,11 @@ def main(
     module_path = os.path.abspath(module_path)
 
     # Load the module
+    logger.log('Loading module...')
     training_module: TrainingModule = load_module(module_path, train_script, logger=logger)
+    if not TrainingModule.validate(training_module):
+        raise ValueError('Invalid training module')
+    logger.log('Module loaded!')
 
     # Execute the training script
     if return_future:

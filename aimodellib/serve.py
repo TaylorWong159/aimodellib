@@ -50,7 +50,12 @@ def main(
     port = int(serve_args[0]) if len(serve_args) > 0 else 8080
 
     # Load the module
+    logger.log('Loading module...')
     inference_module: InferenceModule = load_module(module_path, inference_script, logger=logger)
+    if not InferenceModule.validate(inference_module):
+        raise ValueError('Invalid inference module')
+    logger.log('Module loaded!')
+
     logger.log('Loading Model...')
     model = inference_module.load(model_dir, logger=logger)
     logger.log('Model loaded!')

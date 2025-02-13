@@ -118,6 +118,19 @@ class InferenceModule[Model, Input, Output](Protocol):
             serialized to an accepted content type or None if it cannot
         """
 
+    @staticmethod
+    def validate(obj: Any) -> bool:
+        """
+        Validate the object fufills the InferenceMoule protocol
+
+        Args:
+            obj (Any): The object to validate
+
+        Returns:
+            bool: True if the object fufills the protocol, False otherwise
+        """
+        return all(hasattr(obj, attr) for attr in ['load', 'deserialize', 'predict', 'serialize'])
+
 class TrainingModule(Protocol):
     """
     A module that can be used to train a model
@@ -147,3 +160,16 @@ class TrainingModule(Protocol):
             logger (Logger | None): A logger passed in to use for logging. If not present it should
             be assumed to be None
         """
+
+    @staticmethod
+    def validate(obj: Any) -> bool:
+        """
+        Validate the object fufills the TrainingModule protocol
+
+        Args:
+            obj (Any): The object to validate
+
+        Returns:
+            bool: True if the object fufills the protocol, False otherwise
+        """
+        return all(hasattr(obj, attr) for attr in ['train'])
