@@ -6,6 +6,7 @@ from importlib.util import spec_from_file_location, module_from_spec
 import os
 import subprocess as sp
 import sys
+from types import ModuleType
 
 from ..util import Logger
 
@@ -16,7 +17,7 @@ def load_module(
     script: str,
     logger: Logger | None = None,
     silent: bool = False
-) -> None:
+) -> ModuleType:
     """
     Load a module by name
     """
@@ -49,7 +50,8 @@ def load_module(
         os.path.join(module_path, script)
     )
     if module_spec is None:
-        raise ValueError(f'Could not load training module "{script}"')
+        raise ValueError(f'Could not load module "{script}"')
     module = module_from_spec(module_spec)
     module_spec.loader.exec_module(module)
     log('Module loaded!')
+    return module

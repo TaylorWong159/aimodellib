@@ -21,7 +21,7 @@ def main() -> None:
     elif mode == 'train':
         train(args)
     else:
-        raise ValueError(f'Invalid mode: {mode}')
+        raise ValueError(f'Invalid mode: "{mode}" expected: "package" | "serve" | "train"')
 
 if __name__ == '__main__':
     main()
