@@ -52,7 +52,7 @@ def main(
     # Parse args
     if len(args) < 3:
         logger.log(
-            'Usage: python train.py <training_module> <training_entry_point> <artifacts_dir> '
+            'Usage: aimodellib train <training_module> <training_script> <model_dir> '
             '[training_args...]'
         )
         return None

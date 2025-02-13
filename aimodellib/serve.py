@@ -44,6 +44,12 @@ def main(
     Start serving inference requests
     """
     # Parse args
+    if len(args) < 2:
+        logger.log(
+            'Usage: aimodellib serve <inference_module> <inference_script> <model_dir>'
+        )
+        return None
+    # Parse args
     logger.log('Serve args:', *args)
     module_path, inference_script, model_dir, *serve_args = args
     module_path = os.path.abspath(module_path)

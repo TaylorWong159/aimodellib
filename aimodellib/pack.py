@@ -18,31 +18,31 @@ def main(args: list[str]) -> None:
     # Parse args
     parser = argparse.ArgumentParser(description='Package the model for deployment')
     parser.add_argument(
-        '--module-dir',
+        '--module-dir', '-m',
         help='The directory containing the model module',
         type=str,
         default=''
     )
     parser.add_argument(
-        '--train-script',
+        '--train-script', '-t',
         help='The path from the module dir to the training script',
         type=str,
         default='train.py'
     )
     parser.add_argument(
-        '--serve-script',
+        '--serve-script', '-s',
         help='The path from the module dir to the serving script',
         type=str,
         default='serve.py'
     )
     parser.add_argument(
-        '--log-name-format',
+        '--log-name-format', '-l',
         help='The format for the log file name',
         type=str,
         default='%Y-%m-%dT%H-%M-%S.log'
     )
     parser.add_argument(
-        '--log-dir',
+        '--log-dir', '-L',
         help='The directory to store logs',
         type=str,
         default='logs'
@@ -53,13 +53,13 @@ def main(args: list[str]) -> None:
         action='store_true'
     )
     parser.add_argument(
-        '--tensorboard-dir',
+        '--tensorboard-dir', '-T',
         help='The directory to store tensorboard logs',
         type=str,
         default='tb_logs'
     )
     parser.add_argument(
-        '--manifest-file',
+        '--manifest-file', '-M',
         help='The path a the manifest file to use (overrides other options)',
         type=str
     )
