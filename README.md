@@ -89,13 +89,13 @@ Serialize/encode a prediction back to bytes. Return the bytes and the content ty
 
 
 ## Packaging
-External programs should use the following **Model Archive** specification when transfering models and their artifacts.
+External programs should use the following **Model Archive** specification when transferring models and their artifacts.
 
 ### Model Archive
-A **Model Archive** is a **gzip** compressed **tar** archive file (**.tar.gz**) containing:
+A **Model Archive** is a **gzip** compressed **tar** archive file (`.tar.gz`) containing:
     1. The source code required for training and serving the model
-    2. A requirements file (**requirements.txt**) containing any additional pip requirements; and
-    3. A manifest file (**manifest.json**) (see [The Manifest File](#the-manifest-file) for details)
+    2. A requirements file (`requirements.txt`) containing any additional pip requirements; and
+    3. A manifest file (`manifest.json`) (see [The Manifest File](#the-manifest-file) for details)
 The path from the archive root to the folder containing all of the source code and requirements file will be known as the **module dir**. 
 
 ### Generating the Model Archive
@@ -119,7 +119,7 @@ aimodellib package [OPTIONS]
 | **--output, -o**              | The path to save the output model package to                                                                                                                              | **"model.tar.gz"**          |
 
 ### The Manifest File
-The manifest file **must** be named `manifest.json` (case sensitive). If it has any other name it will be treated as invalid. It must be a well structures JSON file with one top-level object containing the parameters required for training and serving. Those parameters are as follows:
+A manifest file **must** be named `manifest.json` (case sensitive). If it has any other name it will be treated as invalid. It must be a well structured JSON file with one top-level object containing the parameters required for training and serving. Those parameters are as follows:
 
 | Parameter                | Description                                            | Type               | Default                     |
 |--------------------------|--------------------------------------------------------|--------------------|-----------------------------|
@@ -131,7 +131,9 @@ The manifest file **must** be named `manifest.json` (case sensitive). If it has 
 | **enableTensorboard**    | Whether or not to enable tensorboard                   | **boolean**        | **false**                   |
 | **tensorboardDirectory** | The path to save and read tensorboard logs to and from | **string**         | **"tb_logs"**               |
 
-##### Example manifest file:
+External programs are may support additional parameters but **MUST** accept all those listed above. Any external program that does not accept all of these parameters cannot be considered to adhere to the aimodellib protocol.
+
+#### Example manifest file:
 ``` JSON
 // manifest.json
 {
@@ -144,7 +146,7 @@ The manifest file **must** be named `manifest.json` (case sensitive). If it has 
     "tensorboardDirectory": "tb_logs"
 }
 ```
-This example specifies:
+#### This example specifies:
 - The archive root as the module dir
 - main.py as both the training script and serving script
 - "logs/"%Y-%m-%dT%H-%M-%S.log" as the format log files should be save in; and
