@@ -50,15 +50,36 @@ def save_file(path: str, contents: bytes, content_type: str = 'application/octet
     protocol = protocol.lower()
     if protocol == 'file':
         with open(uri, 'wb') as file:
-            return file.write(contents)
+            file.write(contents)
+            return
     if protocol in ['http', 'https']:
-        return request(
-            'POST',
-            uri,
-            headers={'Content-Type': content_type},
-            data=contents,
-            timeout=10,
-        )
+        try:
+            res = request(
+                'POST',
+                uri,
+                headers={'Content-Type': content_type},
+                data=contents,
+                timeout=10,
+            )
+        except TimeoutError:
+            request(
+                'PUT',
+                uri,
+                headers={'Content-Type': content_type},
+                data=contents,
+                timeout=10,
+            )
+            return
+        else:
+            if not res.ok:
+                request(
+                    'PUT',
+                    uri,
+                    headers={'Content-Type': content_type},
+                    data=contents,
+                    timeout=10,
+                )
+            return
     if protocol == 's3':
         bucket, key = uri.split('/', 1)
         return S3_CLIENT.put_object(Bucket=bucket, Key=key, Body=contents)
