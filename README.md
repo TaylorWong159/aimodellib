@@ -28,7 +28,7 @@ def train(
 - **\*args:** The arguments passed to the training script as strings
 - **tensor_board_enabled:** This will indicate whether or not tensorboard has been enabled by an external program
 - **tensor_board_dir:** If tensorboard has been enabled this will contain the directory the training script should save tensorboard logs to
-- **logger:** If a logger is provided the training script should use that logger to log any messages. See `aimodellib.utils.Logger` for more detail on the `Logger` protocol. `Logger.log` has a similar signature to print. There is also a class `aimodellib.utils.PrintLogger` that wraps the standard `print` function while implementing the `Logger` protocol although it can only print to stout.
+- **logger:** If a logger is provided the training script should use that logger to log any messages. See `aimodellib.utils.types.Logger` for more detail on the `Logger` protocol. `Logger.log` has a similar signature to print. There is also a class `aimodellib.utils.logging.PrintLogger` that wraps the standard `print` function while implementing the `Logger` protocol although it can only print to stout.
 
 
 ## Serving
@@ -64,6 +64,7 @@ def serialize(
 ) -> tuple[bytes, str] | None:
     ...
 ```
+**\*Note:** `Model`, `Input`, and `Output` types are type parameters and can vary depending on the serving script. Runner programs should not enforce typing on these
 #### Load:
 Load and return a model
 - **model_dir:** The directory to load any artifacts from
@@ -84,9 +85,11 @@ Make a prediction/inference on an input
 #### Serialize:
 Serialize/encode a prediction back to bytes. Return the bytes and the content type of them
 - **data:** The prediction
-- **accepted:** Acceptable formats to serialize to (if not present should be assumed to be "*/*" i.e. any format)
+- **accepted:** Acceptable formats to serialize to (if not present should be assumed to be "**\*/\***" i.e. any format)
 - **logger:** If provided it should be used to log any messages
 
+### Inference
+While runner programs are free to execute the serving scripts as they please, in general the `load` function will be called first on startup, a server is then created and for each request recieved by the server: `deserialize` is called to parse the request body to a type the model is expecting, `predict`, is called on the parsed data and the loaded model to perform the inference, the prediction is passed to `serialize` to convert the data to a byte string, and finally that byte string is returned as the response body. This is the intended use and serving scripts should be written with this structure in mind.
 
 ## Packaging
 External programs should use the following **Model Archive** specification when transferring models and their artifacts.
@@ -113,7 +116,7 @@ aimodellib package [OPTIONS]
 | **--serve-script, -s**        | The path from the module directory to the serving script to use (see [Serving](#Serving) for details on the serving script requirements)                                  | **"serve.py"**              |
 | **--log-name-format, -l**     | The strftime formate string to use for naming log files                                                                                                                   | **"%Y-%m-%dT%H-%M-%S.log"** |
 | **--log-dir, -L**             | The path from the package root to save log files to                                                                                                                       | **"logs"**                  |
-| **--enable-tensorboard**      | If present a tensorboard server will be run on TB_PORT or 6006                                                                                                            | **N/A**                     |
+| **--enable-tensorboard**      | If present, a tensorboard server will be run on TB_PORT or 6006                                                                                                           | **N/A**                     |
 | **--tensorboard-dir, -T**     | The path from the package root to save tensorboard logs to for the server to use                                                                                          | **"tb_logs"**               |
 | **--manifest-file, -M**       | The path to a manifest file to use instead of generating one from the arguments above (see [Manifest File](#Manifest-File) for details on the manifest file requirements) | **N/A**                     |
 | **--output, -o**              | The path to save the output model package to                                                                                                                              | **"model.tar.gz"**          |
@@ -147,7 +150,7 @@ External programs are may support additional parameters but **MUST** accept all 
 }
 ```
 #### This example specifies:
-- The archive root as the module dir
-- main.py as both the training script and serving script
-- "logs/"%Y-%m-%dT%H-%M-%S.log" as the format log files should be save in; and
-- Tensorboard should be enabled and use "tb_logs" as the tensorboard log directory
+- The archive root (`.`) as the module dir
+- `main.py` as both the training script and serving script
+- `logs/"%Y-%m-%dT%H-%M-%S.log` as the format log files should be save in; and
+- Tensorboard should be enabled and use `tb_logs` as the tensorboard log directory
