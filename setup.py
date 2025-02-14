@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='aimodellib',
-    version='1.0.0-a2',
+    version='1.0.0-a3',
     packages=find_packages(),
     install_requires=[
         'aiohttp',
