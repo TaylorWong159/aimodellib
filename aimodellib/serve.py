@@ -38,6 +38,7 @@ async def _run_server(app: aiohttp.web.Application, logger: Logger, port: int = 
 def main(
     args: list[str],
     logger: Logger=PrintLogger(),
+    port: int = 8080,
     return_future: bool = False
 ) -> asyncio.Future[None] | None:
     """
@@ -46,14 +47,18 @@ def main(
     # Parse args
     if len(args) < 2:
         logger.log(
-            'Usage: aimodellib serve <inference_module> <inference_script> <model_dir>'
+            'Usage: aimodellib serve <inference_module> <inference_script> <model_dir> [port]'
         )
         return None
     # Parse args
     logger.log('Serve args:', *args)
     module_path, inference_script, model_dir, *serve_args = args
     module_path = os.path.abspath(module_path)
-    port = int(serve_args[0]) if len(serve_args) > 0 else 8080
+    if len(serve_args) > 0:
+        try:
+            port = int(serve_args[0])
+        except ValueError as err:
+            raise ValueError(f'Invalid port "{serve_args[0]}"') from err
 
     # Load the module
     logger.log('Loading module...')

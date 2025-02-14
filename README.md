@@ -4,7 +4,7 @@ This library is designed to standardize the training and deployment of AI models
 ## Training
 The purpose of this library is to provide external programs with a standard interface to train and serve models. Training is done through the TrainingModule protocol (see `aimodellib.util.types.TrainingModule`). This library also comes with a basic runner indended for local testing before packaging for said external programs. To use the basic training runner you can run the following command:
 ```
-aimodellib train <training_module> <training_script> <model_dir> [training_args]
+aimodellib train <training_module> <training_script> <model_dir> [training_args...]
 ```
 
 - **training_module:** The path to the folder containing the training script, other source code files, and optionally a requirements file (`requirements.txt`)
@@ -34,12 +34,12 @@ def train(
 ## Serving
 As previously stated, the purpose of this library is to provide external programs with a standard interface to train and serve models. Serving is done through the InferenceModule protocol (see `aimodellib.util.types.InferenceModule`). This library also comes with a basic runner indended for local testing before packaging for said external programs. To use the basic serving runner you can run the following command:
 ```
-aimodellib serve <inference_module> <inference_script> <model_dir>
+aimodellib serve <inference_module> <inference_script> <model_dir> [port]
 ```
-
 - **serving_module:** The path to the folder containing the serving script, other source code files, and optionally a requirements file (`requirements.txt`)
 - **serving_script:** The name of the python serving script to use (for more detail see [The Serving Script](#the-serving-script))
 - **model_dir:** The path to the folder to read any artifacts from
+- **port:** The port to serve on or `8080` if not present
 
 ### The Serving Script
 The serving script **MUST** implement the `InferenceModule` protocol. This means the script should expose functions compatible with the following signatures:
