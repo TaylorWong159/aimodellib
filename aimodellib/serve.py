@@ -38,7 +38,6 @@ async def _run_server(app: aiohttp.web.Application, logger: Logger, port: int = 
 def main(
     args: list[str],
     logger: Logger=PrintLogger(),
-    port: int = 8080,
     return_future: bool = False
 ) -> asyncio.Future[None] | None:
     """
@@ -59,6 +58,8 @@ def main(
             port = int(serve_args[0])
         except ValueError as err:
             raise ValueError(f'Invalid port "{serve_args[0]}"') from err
+    else:
+        port = 8080
 
     # Load the module
     logger.log('Loading module...')
