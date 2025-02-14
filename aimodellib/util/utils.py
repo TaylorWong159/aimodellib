@@ -25,7 +25,7 @@ def get_file(path: str) -> bytes:
         with open(uri, 'rb') as file:
             return file.read()
     if protocol in ['http', 'https']:
-        return request('GET', uri, timeout=10).content
+        return request('GET', path, timeout=10).content
     if protocol == 's3':
         bucket, key = uri.split('/', 1)
         return S3_CLIENT.get_object(Bucket=bucket, Key=key)['Body'].read()
@@ -56,7 +56,7 @@ def save_file(path: str, contents: bytes, content_type: str = 'application/octet
         try:
             res = request(
                 'POST',
-                uri,
+                path,
                 headers={'Content-Type': content_type},
                 data=contents,
                 timeout=10,
@@ -64,7 +64,7 @@ def save_file(path: str, contents: bytes, content_type: str = 'application/octet
         except TimeoutError:
             request(
                 'PUT',
-                uri,
+                path,
                 headers={'Content-Type': content_type},
                 data=contents,
                 timeout=10,
@@ -74,7 +74,7 @@ def save_file(path: str, contents: bytes, content_type: str = 'application/octet
             if not res.ok:
                 request(
                     'PUT',
-                    uri,
+                    path,
                     headers={'Content-Type': content_type},
                     data=contents,
                     timeout=10,
