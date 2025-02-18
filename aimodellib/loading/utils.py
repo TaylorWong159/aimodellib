@@ -6,7 +6,9 @@ from importlib.util import spec_from_file_location, module_from_spec
 import os
 import subprocess as sp
 import sys
+import threading
 from types import ModuleType
+from typing import IO
 
 from ..util import Logger
 
@@ -21,7 +23,17 @@ def load_module(
     """
     Load a module by name
     """
-    log = logger.log if logger is not None else print if not silent else lambda *_1, **_2: None
+    if silent:
+        # Suppress all output
+        def log(*_1, **_2):
+            ...
+    elif logger is not None:
+        # Use logger
+        log = logger.log
+    else:
+        # Use print
+        def log(*args, level='INFO', **kwargs):
+            print(f'[{level}]:', *args, **kwargs)
 
     # Add training module to path
     sys.path.append(module_path)
@@ -36,10 +48,25 @@ def load_module(
             stderr=sp.PIPE,
             universal_newlines=True
         ) as pip_process:
-            for line in iter(pip_process.stdout.readline, ''):
-                log(line, end='')
-            status_code = pip_process.wait()
-            if status_code != 0:
+            def reader(io: IO[str], level: str = 'INFO') -> None:
+                for line in iter(io.readline, ''):
+                    log(line, level=level)
+            stdout_thread = threading.Thread(
+                target=reader,
+                args=(pip_process.stdout,),
+                kwargs={'level': 'INFO'}
+            )
+            stderr_thread = threading.Thread(
+                target=reader,
+                args=(pip_process.stderr,),
+                kwargs={'level': 'ERROR'}
+            )
+            stdout_thread.start()
+            stderr_thread.start()
+            stdout_thread.join()
+            stderr_thread.join()
+
+            if pip_process.poll() != 0:
                 raise ValueError(f'Failed to install requirements: {pip_process.stderr.read()}')
         log('Requirements installed!')
 
