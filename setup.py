@@ -2,7 +2,9 @@
 import re
 from setuptools import setup, find_packages
 
-VERSION_STR_REGEX = re.compile(r'.*VERSION\s*=\s*[\'"]([^\'"]*)[\'"].*')
+VERSION_STR_REGEX = re.compile(
+    r'^(?:.|\s)*VERSION\s*=\s*[\'"]([^\'"]*)[\'"](?:.|\s)*$'
+)
 
 with open('aimodellib/__init__.py', 'r', encoding='utf-8') as f:
     version_str = f.read()
