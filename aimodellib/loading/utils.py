@@ -14,6 +14,9 @@ from ..util import Logger
 
 PIP_CMD = os.environ.get('PIP_CMD', 'pip')
 
+# def send_get_request(url: str, timeout: float = 5.0) -> bytes:
+#     """"""
+
 def load_module(
     module_path: str,
     script: str,
