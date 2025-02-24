@@ -244,6 +244,7 @@ class BatchFileLogger(BufferedLogger):
             by callbacks will be suppressed. If not present the value set in the constructor will be
             used
         """
+        self._timeout.cancel()
         suppress_errors = suppress_errors if suppress_errors is not None else self._suppress_errors
         log_batch = ''.join(self._logs)
         try:
@@ -252,7 +253,6 @@ class BatchFileLogger(BufferedLogger):
             if not suppress_errors:
                 raise err
         self._logs.clear()
-        self._timeout.cancel()
 
 class AsyncFileLogger(Logger):
     """

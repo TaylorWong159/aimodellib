@@ -133,6 +133,7 @@ class Timeout:
         self._callbacks.clear()
 
     def _call_callbacks(self) -> None:
+        print('Timeout expired') # TODO: Remove test print
         if not self._cancelled:
             for callback in self._callbacks:
                 callback()
