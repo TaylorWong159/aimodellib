@@ -8,6 +8,7 @@ import os
 from typing import Any, Callable, Coroutine, Iterable
 
 from .types import Logger
+from .utils import Timeout
 
 async def _run_async_callback(
     callback: Coroutine[Any, Any, None],
@@ -19,9 +20,10 @@ async def _run_async_callback(
         if not suppress_errors:
             raise err
 
-class BaseLogger(Logger):
+class BufferedLogger(Logger):
     """
-    Simple Logger that can call generic callbacks/asynchornous callbacks
+    Simple Logger that buffers logs until flushed then can call generic callbacks/asynchornous
+    callbacks
 
     Args:
         default_log_level (optional str | None default: None): The default log level to use
@@ -164,7 +166,7 @@ class PrintLogger(Logger):
             while flushing the logs
         """
 
-class BatchFileLogger(BaseLogger):
+class BatchFileLogger(BufferedLogger):
     """
     Logger that writes logs as files in batches
     """
@@ -177,6 +179,7 @@ class BatchFileLogger(BaseLogger):
         buffer_size: int | None = None,
         suppress_errors: bool = False,
         use_async: bool = False,
+        timeout: float = 10.0
     ) -> None:
         self._log_protocol, self._log_dir, *_ = (
             log_dir.split('://', 1) if '://' in log_dir else ('file', log_dir)
@@ -186,6 +189,11 @@ class BatchFileLogger(BaseLogger):
             os.makedirs(self._log_dir, exist_ok=True)
         self._log_name_format = log_name_format
         self._use_async = use_async
+        self._timeout = Timeout(
+            timeout,
+            'ASYNCIO' if use_async else 'THREAD'
+        )
+        self._timeout.add_callback(self.flush)
 
         super().__init__(
             default_log_level=default_log_level,
@@ -197,29 +205,20 @@ class BatchFileLogger(BaseLogger):
     def _gen_log_name(self) -> str:
         return dt.now().strftime(self._log_name_format)
 
+    def log(
+        self,
+        *msgs: Any,
+        sep: str=' ',
+        end='\n',
+        level: str | None = None,
+        flush: bool = False
+    ) -> None:
+        super().log(*msgs, sep=sep, end=end, level=level, flush=flush)
+        self._timeout.start(raise_error=False)
+
     def _log(self, log: str) -> None: # TODO: Implement logging to s3 and http
         """
         Log a message to a file
-        """
-        if self._log_protocol == 'file':
-            # Save as file on local storage
-            path = os.path.join(self._log_dir, self._gen_log_name())
-            with open(path, 'w', encoding='utf-8') as log_file:
-                log_file.write(log)
-        elif self._log_protocol == 's3':
-            # Save to an s3 bucket via boto3 (requires permisions to write to the bucket)
-            _bucket, folder = self._log_dir.split('/', 1)
-            sep = '/' if folder and not folder.endswith('/') else ''
-            _key = f'{folder}{sep}{self._gen_log_name()}'
-            raise NotImplementedError('S3 logging has not been implemented yet')
-        elif self._log_protocol in ['http', 'https']:
-            # Write to an http endpoint (requires the endpoint to be able to accept logs via POST)
-            raise NotImplementedError('HTTP logging has not been implemented yet')
-
-
-    async def _log_async(self, log: str) -> None: # TODO: Implement logging to s3 and http
-        """
-        Log a message to a file asynchronously
         """
         if self._log_protocol == 'file':
             # Save as file on local storage
@@ -247,15 +246,13 @@ class BatchFileLogger(BaseLogger):
         """
         suppress_errors = suppress_errors if suppress_errors is not None else self._suppress_errors
         log_batch = ''.join(self._logs)
-        if not self._use_async:
-            try:
-                self._log(log_batch)
-            except Exception as err: #pylint: disable=broad-exception-caught
-                if not suppress_errors:
-                    raise err
-        else:
-            asyncio.create_task(_run_async_callback(self._log_async(log_batch), suppress_errors))
+        try:
+            self._log(log_batch)
+        except Exception as err: #pylint: disable=broad-exception-caught
+            if not suppress_errors:
+                raise err
         self._logs.clear()
+        self._timeout.cancel()
 
 class AsyncFileLogger(Logger):
     """

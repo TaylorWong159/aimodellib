@@ -53,7 +53,7 @@ def load_module(
         ) as pip_process:
             def reader(io: IO[str], level: str = 'INFO') -> None:
                 for line in iter(io.readline, ''):
-                    log(line, level=level)
+                    log(line, level=level, flush=True)
             stdout_thread = threading.Thread(
                 target=reader,
                 args=(pip_process.stdout,),

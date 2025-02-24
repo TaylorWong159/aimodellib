@@ -1,1 +1,2 @@
-VERSION = '1.0.0-a4'
+#pylint: disable=missing-module-docstring
+VERSION = '1.0.0-a5'
