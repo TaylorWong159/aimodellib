@@ -246,6 +246,8 @@ class BatchFileLogger(BufferedLogger):
         """
         self._timeout.cancel()
         suppress_errors = suppress_errors if suppress_errors is not None else self._suppress_errors
+        if len(self._logs) == 0:
+            return
         log_batch = ''.join(self._logs)
         try:
             self._log(log_batch)
