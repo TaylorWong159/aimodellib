@@ -26,10 +26,10 @@ async def _run_server(app: aiohttp.web.Application, logger: Logger, port: int = 
         await runner.setup()
         site = aiohttp.web.TCPSite(runner, port=port)
         await site.start()
-        logger.log('Server started!')
+        logger.log('Server started!', flush=True)
         await asyncio.Future() # Run till cancelled
     except asyncio.CancelledError:
-        logger.log('Server')
+        logger.log('Server stopping...')
     finally:
         logger.log('Cleaning up server resources...')
         await runner.cleanup()
@@ -66,6 +66,7 @@ def main(
     inference_module: InferenceModule = load_module(module_path, inference_script, logger=logger)
     if not InferenceModule.validate(inference_module):
         raise ValueError('Invalid inference module')
+    logger.flush()
     logger.log('Module loaded!')
 
     logger.log('Loading Model...')
