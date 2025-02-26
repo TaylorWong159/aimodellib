@@ -46,6 +46,7 @@ class BufferedLogger(Logger):
     def __init__(
         self,
         default_log_level: str | None = None,
+        default_time_fmt: str | None = None,
         print_local: bool = True,
         buffer_size: int | None = None,
         callbacks: Iterable[Callable[[str], None]] = (),
@@ -53,6 +54,7 @@ class BufferedLogger(Logger):
         suppress_errors: bool = False
     ) -> None:
         self._log_level: str | None = default_log_level
+        self._time_fmt: str | None = default_time_fmt
         self._print_local: bool = print_local
         self._logs: list[str] = []
         self._buffer_size: int | None = buffer_size
@@ -71,9 +73,10 @@ class BufferedLogger(Logger):
     def log(
         self,
         *msgs: Any,
-        sep: str=' ',
-        end='\n',
+        sep: str = ' ',
+        end: str = '\n',
         level: str | None = None,
+        time_fmt: str | None = None,
         flush: bool = False
     ) -> None:
         """
@@ -87,12 +90,22 @@ class BufferedLogger(Logger):
             flush (optional bool default: False): Whether to flush the logs after logging the
             message
         """
+
+        msg_list: list[str] = []
+
+        # Premend time if present
+        if time_fmt is not None or self._time_fmt is not None:
+            msg_list.append(dt.now().strftime(time_fmt or self._time_fmt))
+
         # Prepend log level if present or default log level is set
         log_level = level or self._log_level
         if log_level is not None:
-            msg = f'[{log_level}]: {sep.join([str(msg) for msg in msgs])}{end}'
-        else:
-            msg = sep.join([str(msg) for msg in msgs]) + end
+            msg_list.append(f'[{log_level}]: ')
+
+        # Join the messages
+        msg_list.append(sep.join([str(msg) for msg in msgs]) + end)
+        msg = ''.join(msg_list)
+
         # If logger is configured to print locally print to stdout
         if self._print_local:
             print(msg, end='')
@@ -130,16 +143,21 @@ class PrintLogger(Logger):
     Logger wrapper for native Python print
     """
 
-    def __init__(self, default_log_level: str | None = None) -> None:
+    def __init__(
+        self,
+        default_log_level: str | None = None,
+        default_time_fmt: str | None = None
+    ) -> None:
         self._default_log_level: str | None = default_log_level
-
+        self._default_time_fmt: str | None = default_time_fmt
 
     def log(
         self,
         *msgs: Any,
-        sep: str=' ',
-        end='\n',
+        sep: str = ' ',
+        end: str = '\n',
         level: str | None = None,
+        time_fmt: str | None = None,
         flush: bool = False
     ) -> None:
         """
@@ -153,9 +171,13 @@ class PrintLogger(Logger):
             flush (optional bool default: False): Whether to flush the logs after logging the
             message
         """
+        time_fmt = time_fmt or self._default_time_fmt
+        time = (dt.now().strftime(time_fmt) + ' ') if time_fmt is not None else ''
+
         level = level or self._default_log_level
         log_level = '' if level is None else f'[{level}]: '
-        print(log_level, *msgs, sep=sep, end=end, flush=flush)
+
+        print(time + log_level + sep.join(msgs), end=end, flush=flush)
 
     def flush(self, _suppress_errors: bool | None = None) -> None:
         """
@@ -175,6 +197,7 @@ class BatchFileLogger(BufferedLogger):
         log_dir: str,
         log_name_format: str = '%Y-%m-%dT%H-%M-%S.log',
         default_log_level: str | None = None,
+        default_time_fmt: str | None = None,
         print_local: bool = True,
         buffer_size: int | None = None,
         suppress_errors: bool = False,
@@ -198,6 +221,7 @@ class BatchFileLogger(BufferedLogger):
         super().__init__(
             default_log_level=default_log_level,
             print_local=print_local,
+            default_time_fmt=default_time_fmt,
             buffer_size=buffer_size,
             suppress_errors=suppress_errors
         )
@@ -208,12 +232,13 @@ class BatchFileLogger(BufferedLogger):
     def log(
         self,
         *msgs: Any,
-        sep: str=' ',
-        end='\n',
+        sep: str = ' ',
+        end: str = '\n',
         level: str | None = None,
+        time_fmt: str | None = None,
         flush: bool = False
     ) -> None:
-        super().log(*msgs, sep=sep, end=end, level=level, flush=flush)
+        super().log(*msgs, sep=sep, end=end, level=level, time_fmt=time_fmt, flush=flush)
         self._timeout.start(raise_error=False)
 
     def _log(self, log: str) -> None: # TODO: Implement logging to s3 and http
@@ -279,8 +304,9 @@ class AsyncFileLogger(Logger):
     def log(
         self,
         *msgs: Any,
-        sep: str=' ',
-        end='\n',
+        sep: str = ' ',
+        end: str ='\n',
+        time_fmt: str | None = None,
         level: str | None = None,
         **_kwargs
     ) -> None:
@@ -295,8 +321,9 @@ class AsyncFileLogger(Logger):
             flush (optional bool default: False): Whether to flush the logs after logging the
         """
         level = level or self._default_log_level
+        time = (dt.now().strftime(time_fmt) + ' ') if time_fmt is not None else ''
         log_level = f'[{level}]: ' if level is not None else ''
-        self._logs.put_nowait(log_level + sep.join([str(msg) for msg in msgs]) + end)
+        self._logs.put_nowait(time + log_level + sep.join([str(msg) for msg in msgs]) + end)
 
     def flush(self, _suppress_errors: bool | None = None) -> None:
         """

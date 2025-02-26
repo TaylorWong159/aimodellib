@@ -18,9 +18,10 @@ class Logger(Protocol):
     def log(
         self,
         *msgs: Any,
-        sep: str=' ',
-        end='\n',
+        sep: str = ' ',
+        end: str = '\n',
         level: str | None = None,
+        time_ftm: str | None = None,
         flush: bool = False
     ) -> None:
         """
@@ -31,6 +32,8 @@ class Logger(Protocol):
             sep (optional str default: ' '): The separator to use when joining the messages
             end (optional str default: '\n'): String to append to the end of the message
             level (optional str | None default: None): The log level of the message
+            time_ftm (optional str | None default: None): The time format to use when logging or
+            None to not include the time
             flush (optional bool default: False): Whether to flush the logs after logging the
             message
         """
